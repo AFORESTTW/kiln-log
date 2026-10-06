@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>燒窯紀錄</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* v2：鉛字宋體＋象牙紙色 */
+:root{
+  --bg:#faf9f5; --surface:#f0eee6; --ink:#141413; --muted:#6a6963; --line:#dcd9ce;
+  --accent:#bd5d3a; --accent-ink:#faf9f5; --danger:#9e3324;
+  --peep:#141413; --peep-edge:transparent;
+  --song:"Chiron Sung HK","Noto Serif TC","Songti TC","PMingLiU","Noto Serif CJK TC",serif;
+  --bleed:0 0 .55px rgba(20,20,19,.65);
+  color-scheme:light dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1f1e1d; --surface:#2a2927; --ink:#f0eee6; --muted:#a3a198; --line:#3b3a37;
+    --accent:#d97757; --accent-ink:#1f1e1d; --danger:#ec8a76;
+    --peep:#141413; --peep-edge:#3b3a37; --bleed:0 0 .5px rgba(240,238,230,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1f1e1d; --surface:#2a2927; --ink:#f0eee6; --muted:#a3a198; --line:#3b3a37;
+  --accent:#d97757; --accent-ink:#1f1e1d; --danger:#ec8a76;
+  --peep:#141413; --peep-edge:#3b3a37; --bleed:0 0 .5px rgba(240,238,230,.4);
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 70px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.8 var(--song);-webkit-text-size-adjust:100%;font-feature-settings:"palt" 0;font-variant-numeric:lining-nums}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+img{max-width:100%;display:block}
+
+/* 頂部：雙線刊頭 */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:3px double var(--ink)}
+.top-in{max-width:760px;margin:0 auto;padding:12px 18px 10px;display:flex;align-items:center;gap:20px}
+.brand{font-weight:800;font-size:1.4rem;line-height:1;letter-spacing:.22em;text-decoration:none;text-shadow:var(--bleed);margin-right:-.22em}
+.tabs{display:flex;gap:16px;flex:1}
+.tabs a{text-decoration:none;color:var(--muted);padding:4px 0;letter-spacing:.1em;border-bottom:1.5px solid transparent}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink)}
+.lock{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 14px;font-size:.85rem;cursor:pointer;white-space:nowrap;max-width:40vw;overflow:hidden;text-overflow:ellipsis}
+body.can-write .lock{border-color:var(--accent);color:var(--accent)}
+
+main{max-width:760px;margin:0 auto;padding:30px 18px 40px}
+h1{font-weight:800;font-size:2.3rem;line-height:1.3;letter-spacing:.08em;margin:6px 0 4px;text-shadow:var(--bleed)}
+h2{font-weight:800;font-size:1.22rem;line-height:1.4;letter-spacing:.1em;margin:44px 0 12px;text-shadow:var(--bleed)}
+.lede{color:var(--muted);margin:0 0 22px;letter-spacing:.04em}
+.headrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.headrow h2{margin-bottom:12px}
+.muted{color:var(--muted)}
+.loading,.empty{padding:56px 0;color:var(--muted);text-align:center}
+.empty p{margin:0 0 16px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ink);background:transparent;border-radius:6px;padding:7px 16px;cursor:pointer;text-decoration:none;line-height:1.4;letter-spacing:.06em}
+.btn:hover{background:var(--surface)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--danger);border-color:transparent}
+.btn.small{padding:3px 11px;font-size:.88rem}
+.btn:disabled{opacity:.55;cursor:wait}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+body:not(.can-write) .w{display:none!important}
+
+/* 窯次列表 */
+.flist{list-style:none;margin:8px 0 0;padding:0}
+.frow{display:grid;grid-template-columns:70px 1fr 116px;gap:16px;align-items:center;padding:16px 2px;border-bottom:1px solid var(--line);text-decoration:none}
+.frow:hover .ftitle{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.fdate .d{display:block;font-weight:800;font-size:1.55rem;line-height:1.1;letter-spacing:.02em;text-shadow:var(--bleed)}
+.ftitle{font-weight:600;letter-spacing:.04em}
+.fsub{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:.88rem;color:var(--muted)}
+.spark{width:116px;height:52px;border-radius:5px;background:var(--peep);box-shadow:0 0 0 1px var(--peep-edge);display:block}
+.cone{display:inline-block;width:.62em;height:.9em;margin-right:.35em;vertical-align:-.06em}
+.yearmark{font-weight:800;font-size:.95rem;letter-spacing:.3em;padding:26px 2px 6px;border-bottom:1px solid var(--ink)}
+
+/* 窯次詳情 */
+.back{display:inline-block;margin-bottom:10px;color:var(--muted);text-decoration:none;font-size:.92rem;letter-spacing:.06em}
+.peephole{background:var(--peep);box-shadow:0 0 0 1px var(--peep-edge);border-radius:10px;padding:16px 10px 10px;margin:22px 0 6px;color:#a39e94}
+.peephole svg{width:100%;height:auto;display:block}
+.peephole .cap{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.85rem;padding:6px 6px 0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0 22px;margin:16px 0 0}
+.facts div{padding:9px 0;border-bottom:1px solid var(--line)}
+.facts dt{font-size:.8rem;color:var(--muted);letter-spacing:.1em}
+.facts dd{margin:0;font-weight:600}
+.prose{white-space:pre-wrap;margin:8px 0 0}
+table.segs{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem;margin-top:12px}
+.segs th,.segs td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}
+.segs thead th{font-weight:600;color:var(--muted);font-size:.82rem;border-bottom:1px solid var(--ink);letter-spacing:.06em}
+.segs td:first-child,.segs th:first-child{text-align:left}
+
+/* 窯內配置 */
+.kiln{border:1.5px solid var(--ink);border-radius:12px 12px 3px 3px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.shelf{display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:stretch}
+.shelf-label{font-weight:800;font-size:1rem;color:var(--muted);display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line)}
+.shelf-body{border-bottom:3px solid var(--line);padding-bottom:7px}
+.spots{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.spot{min-height:36px;border-radius:4px;background:var(--surface);padding:3px 4px;display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start}
+.spot-name{font-size:.68rem;color:var(--muted);width:100%;line-height:1.2}
+.chip{font-size:.8rem;padding:0 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink);text-decoration:none;white-space:nowrap;line-height:1.6}
+.extra{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.kiln-note{font-size:.84rem;color:var(--muted);margin:8px 0 0}
+
+/* 入窯試片 */
+.plist{list-style:none;padding:0;margin:0}
+.pitem{padding:16px 0;border-bottom:1px solid var(--line)}
+.phead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.pcode{font-weight:800;font-size:1.18rem;letter-spacing:.04em;text-decoration:none;text-shadow:var(--bleed)}
+.pcode span{font-weight:400;font-size:.95rem;color:var(--muted);margin-left:10px;text-shadow:none}
+.pmeta{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:.88rem;color:var(--muted)}
+.rating{letter-spacing:.14em;color:var(--ink)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;margin-top:10px}
+.thumbs button{padding:0;border:0;background:var(--line);border-radius:4px;overflow:hidden;aspect-ratio:1;cursor:zoom-in}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+
+/* 試片列表 */
+.search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);margin:6px 0 4px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px 14px;margin-top:16px}
+.tcard{text-decoration:none;display:block}
+.tcard .img{aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;letter-spacing:.06em;color:var(--muted)}
+.tcard .img img{width:100%;height:100%;object-fit:cover}
+.tcard .c{font-weight:800;font-size:1.05rem;letter-spacing:.04em;margin-top:8px;text-shadow:var(--bleed)}
+.tcard .n{font-size:.88rem;color:var(--muted);line-height:1.6}
+
+/* 試片詳情：燒成紀錄時間軸 */
+.timeline{list-style:none;padding:0;margin:0 0 0 6px;border-left:1px solid var(--ink)}
+.timeline li{position:relative;padding:0 0 26px 20px}
+.timeline li::before{content:"";position:absolute;left:-6px;top:9px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:1.5px solid var(--accent)}
+.tl-head{font-weight:600;text-decoration:none;letter-spacing:.03em}
+.recipe{background:var(--surface);border-radius:6px;padding:12px 14px;white-space:pre-wrap;font-variant-numeric:tabular-nums;margin-top:8px}
+
+/* 回收桶 */
+.trash{list-style:none;padding:0;margin:0}
+.trash li{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tr-title{font-weight:600}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.trash-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 12px}
+.trash-photos figure{margin:0}
+.trash-photos img{aspect-ratio:1;width:100%;object-fit:cover;border-radius:4px;opacity:.85}
+.trash-photos figcaption{font-size:.82rem;line-height:1.5;margin:6px 0}
+
+/* 頁尾 */
+.foot{max-width:760px;margin:0 auto;padding:16px 18px 120px;border-top:1px solid var(--line);font-size:.88rem;color:var(--muted);letter-spacing:.08em}
+.foot a{color:var(--muted)}
+
+/* 浮動新增鈕 */
+.fab{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:4;box-shadow:0 6px 20px rgba(20,20,19,.22);padding:11px 20px;border-radius:999px}
+
+/* 對話框 */
+dialog{border:0;border-radius:12px;padding:0;background:var(--bg);color:var(--ink);width:min(560px,calc(100vw - 20px));max-height:calc(100dvh - 30px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+dialog::backdrop{background:rgba(20,20,19,.5)}
+.sheet-form{display:flex;flex-direction:column;max-height:inherit}
+.sheet-head{padding:18px 20px 6px;font-weight:800;font-size:1.3rem;letter-spacing:.08em;text-shadow:var(--bleed)}
+.sheet-body{padding:6px 20px 12px;overflow:auto}
+.sheet-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--line)}
+.field{display:block;margin:12px 0}
+.field>span{display:block;font-size:.84rem;color:var(--muted);margin-bottom:4px;letter-spacing:.06em}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.field textarea{min-height:76px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.hint{font-size:.82rem;color:var(--muted);margin-top:4px;min-height:1.2em}
+.seg-editor{border:1px solid var(--line);border-radius:6px;padding:8px}
+.seg-row{display:grid;grid-template-columns:26px 1fr 1fr 1fr 30px;gap:6px;align-items:center;margin-bottom:6px}
+.seg-row input{width:100%;padding:6px;border:1px solid var(--line);border-radius:5px;background:var(--surface);font-variant-numeric:tabular-nums}
+.seg-row .n{font-size:.8rem;color:var(--muted);text-align:center}
+.seg-head{font-size:.75rem;color:var(--muted)}
+.seg-row button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:1.1rem}
+.preview{background:var(--peep);border-radius:6px;margin-top:8px;padding:6px}
+.preview svg{width:100%;height:auto;display:block}
+
+#lightbox{width:min(900px,calc(100vw - 16px));background:#141413;color:#f0eee6}
+#lightbox img{max-height:calc(100dvh - 140px);margin:0 auto;object-fit:contain}
+#lightbox .lb-foot{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:10px;font-size:.85rem}
+#lightbox .btn{border-color:#5a5955;color:#f0eee6}
+#lightbox .btn:hover{background:#2a2927}
+#lightbox .btn.danger{border-color:transparent;color:#f09a86}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:.92rem;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:16px}
+#toast.show{opacity:1}
+#toast.show.actionable{pointer-events:auto}
+#toast button{border:0;background:none;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:2px 0;font-weight:600;white-space:nowrap}
+.setup{border:1px solid var(--danger);border-radius:8px;padding:16px 18px;margin-top:20px}
+.setup code{background:var(--surface);padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:.9em}
+
+@media (max-width:520px){
+  .frow{grid-template-columns:56px 1fr 92px;gap:10px}
+  .spark{width:92px;height:44px}
+  h1{font-size:1.9rem}
+  .top-in{gap:14px;padding-left:14px;padding-right:14px}
+  .brand{font-size:1.2rem;letter-spacing:.14em;margin-right:-.14em}
+  .tabs{gap:12px}
+}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#/">燒窯紀錄</a>
+    <nav class="tabs">
+      <a href="#/" data-tab="firings">窯次</a>
+      <a href="#/tiles" data-tab="tiles">試片</a>
+    </nav>
+    <button class="lock" id="lockBtn" type="button">輸入密碼</button>
+  </div>
+</header>
+<main id="view"></main>
+<footer class="foot"><a href="#/trash">回收桶</a></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="sheet">
+  <form class="sheet-form" id="sheetForm" novalidate>
+    <div class="sheet-head" id="sheetTitle"></div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-foot">
+      <button type="button" class="btn" data-act="sheet-cancel">取消</button>
+      <button type="submit" class="btn primary" id="sheetSubmit">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="lightbox">
+  <img id="lbImg" alt="">
+  <div class="lb-foot">
+    <span id="lbCap"></span>
+    <span>
+      <button type="button" class="btn danger w" id="lbDelete">移到回收桶</button>
+      <button type="button" class="btn" data-act="lb-close">關閉</button>
+    </span>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+/* ===== 設定：換成你的 Worker 網址（結尾不要加斜線）===== */
+const API_BASE = 'https://kiln-log.YOUR-SUBDOMAIN.workers.dev';
+
+const SPOTS = ['後左', '後中', '後右', '前左', '前中', '前右'];
+const SURFACES = ['亮光', '緞光', '半霧', '霧面'];
+const CONES = ['022','019','018','017','016','015','014','013','012','011','010','09','08','07','06','05','04','03','02','01','1','2','3','4','5','6','7','8','9','10','11','12'];
+// 溫度 → 窯內發光的顏色（450°C 以下不發光）
+const HEAT = [[0,'#767d82'],[450,'#767d82'],[520,'#5a1913'],[650,'#8a2014'],[800,'#bd351b'],[950,'#e3641f'],[1100,'#f39b2f'],[1200,'#f8c95b'],[1300,'#fff1c8']];
+const GRID = '#2c3134', AXIS_TEXT = '#a39e94';
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null || v === '' ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+};
+const $ = s => document.querySelector(s);
+const view = $('#view');
+const state = { key: store.get('kilnlog.key') || '', name: store.get('kilnlog.name') || '' };
+const cache = { firings: null, tiles: null };
+let cur = {};
+let renderToken = 0;
+let sheetSubmit = null;
+
+/* ---------- 小工具 ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fv = (form, n) => String(form.elements[n]?.value ?? '').trim();
+const configured = () => !/YOUR-SUBDOMAIN/.test(API_BASE);
+const photoUrl = key => `${API_BASE}/photos/${encodeURIComponent(key)}`;
+const coneLabel = c => !c ? '' : /^\d{1,3}$/.test(String(c).trim()) ? `Cone ${c}` : String(c);
+const stars = n => (n = +n || 0) ? '●'.repeat(n) + '○'.repeat(5 - n) : '';
+function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function longDate(s) { const [y, m, d] = String(s || '').split('-'); return y ? `${y} 年 ${+m} 月 ${+d} 日` : ''; }
+function parseCurve(c) { if (!c) return []; if (Array.isArray(c)) return c; try { const a = JSON.parse(c); return Array.isArray(a) ? a : []; } catch { return []; } }
+function fmtDuration(h) { const m = Math.round(h * 60), hh = Math.floor(m / 60), mm = m % 60; return hh ? `${hh} 小時${mm ? ` ${mm} 分` : ''}` : `${mm} 分`; }
+function groupBy(arr, k) { const o = {}; for (const x of arr) (o[x[k]] ||= []).push(x); return o; }
+function opts(values, selected, blankLabel) {
+  return (blankLabel ? `<option value="">${esc(blankLabel)}</option>` : '') + values.map(v => {
+    const [val, label] = Array.isArray(v) ? v : [v, v];
+    return `<option value="${esc(val)}"${String(selected ?? '') === String(val) ? ' selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+}
+function placeText(p) { return [p.shelf != null ? `第 ${p.shelf} 層` : '', p.spot || ''].filter(Boolean).join(' '); }
+const coneIcon = () => '<svg class="cone" viewBox="0 0 10 14" aria-hidden="true"><path d="M1.6 13.4 6.6 1 8.9 13.4Z" fill="currentColor" opacity=".5"/></svg>';
+
+let toastTimer;
+function toast(msg, ms = 2600, action) {
+  const t = $('#toast');
+  t.replaceChildren(Object.assign(document.createElement('span'), { textContent: msg }));
+  if (action) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', textContent: action.label });
+    b.onclick = async () => {
+      t.classList.remove('show');
+      try { await action.fn(); } catch (e) { toast(e.message, 4200); }
+    };
+    t.append(b);
+  }
+  t.classList.toggle('actionable', !!action);
+  t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+const UNDO_MS = 7000;
+async function restoreItem(kind, id) {
+  const r = await api(`/api/trash/${kind}/${id}/restore`, { method: 'POST' });
+  invalidate();
+  toast(r.also?.length ? `已還原，所屬的${r.also.join('、')}也一起還原了` : '已還原');
+  return r;
+}
+
+/* ---------- API ---------- */
+async function api(path, { method = 'GET', body, key } = {}) {
+  const headers = {};
+  let payload = body;
+  if (body && !(body instanceof FormData)) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
+  if (method !== 'GET') {
+    headers['X-Write-Key'] = key ?? state.key;
+    if (state.name) headers['X-Writer'] = encodeURIComponent(state.name);
+  }
+  let res;
+  try { res = await fetch(API_BASE + path, { method, headers, body: payload }); }
+  catch { throw new Error('連不到資料庫。請確認網路，或檢查 API_BASE 和 Worker 的 ALLOWED_ORIGINS。'); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401 && key === undefined) setKey('', state.name);
+    const err = new Error(data.error || `伺服器回應 ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+async function getFirings(force) { if (force || !cache.firings) cache.firings = await api('/api/firings'); return cache.firings; }
+async function getTiles(force) { if (force || !cache.tiles) cache.tiles = await api('/api/tiles'); return cache.tiles; }
+function invalidate() { cache.firings = null; cache.tiles = null; }
+
+/* ---------- 寫入權限 ---------- */
+function setKey(key, name) {
+  state.key = key; state.name = name;
+  store.set('kilnlog.key', key); store.set('kilnlog.name', name);
+  updateLock();
+}
+function updateLock() {
+  document.body.classList.toggle('can-write', !!state.key);
+  $('#lockBtn').textContent = state.key ? `${state.name || '已解鎖'} 編輯中` : '輸入密碼';
+}
+function openKeyDialog() {
+  if (state.key) {
+    if (confirm('結束編輯？這台裝置會忘記寫入密碼。')) { setKey('', state.name); toast('已結束編輯'); render({ quiet: true }); }
+    return;
+  }
+  openSheet('輸入寫入密碼', `
+    <label class="field"><span>你的名字（會記在你新增的紀錄上）</span><input name="writer" value="${esc(state.name)}" autocomplete="nickname" maxlength="40"></label>
+    <label class="field"><span>寫入密碼</span><input name="key" type="password" autocomplete="current-password"></label>
+    <p class="hint">密碼只存在這台裝置。工作室的人共用同一組密碼。</p>`,
+    async form => {
+      const key = fv(form, 'key');
+      if (!key) throw new Error('請輸入密碼');
+      await api('/api/auth/check', { method: 'POST', key });
+      setKey(key, fv(form, 'writer'));
+      toast('可以編輯了');
+      render({ quiet: true });
+    }, '解鎖');
+}
+
+/* ---------- 對話框 ---------- */
+function openSheet(title, html, onSubmit, submitLabel = '儲存') {
+  $('#sheetTitle').textContent = title;
+  $('#sheetBody').innerHTML = html;
+  $('#sheetSubmit').textContent = submitLabel;
+  $('#sheetSubmit').disabled = false;
+  sheetSubmit = onSubmit;
+  const d = $('#sheet');
+  if (!d.open) d.showModal();
+  $('#sheetBody').scrollTop = 0;
+}
+$('#sheetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#sheetSubmit');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try { await sheetSubmit(e.target); $('#sheet').close(); }
+  catch (err) { toast(err.message, 4200); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------- 升溫曲線 ---------- */
+function curvePoints(segs) {
+  let t = 0, T = 25, est = false;
+  const pts = [{ t, T }];
+  for (const s of segs) {
+    if (s.target == null || s.target === '' || !Number.isFinite(+s.target)) continue;
+    const target = +s.target;
+    let rate = Math.abs(+s.rate);
+    const full = s.rate == null || s.rate === '' || !Number.isFinite(rate) || rate === 0;
+    if (full) { rate = 600; est = true; }
+    t += Math.abs(target - T) / rate; T = target;
+    pts.push({ t, T, full });
+    const hold = +s.hold;
+    if (Number.isFinite(hold) && hold > 0) { t += hold / 60; pts.push({ t, T }); }
+  }
+  return { pts, total: t, est, peak: Math.max(...pts.map(p => p.T)) };
+}
+
+let gradSeq = 0;
+function curveSvg(segs, { spark = false, width } = {}) {
+  const { pts, total, peak } = curvePoints(segs);
+  const W = spark ? 116 : Math.round(width || 640);
+  const H = spark ? 52 : Math.round(Math.max(180, Math.min(300, W * 0.46)));
+  const cls = spark ? ' class="spark"' : '';
+  if (pts.length < 2) {
+    return spark
+      ? `<svg${cls} viewBox="0 0 ${W} ${H}" aria-hidden="true"><line x1="10" y1="${H - 10}" x2="${W - 10}" y2="${H - 10}" stroke="${GRID}" stroke-width="2" stroke-dasharray="3 5"/></svg>`
+      : `<svg viewBox="0 0 ${W} 110" role="img" aria-label="沒有燒成程式"><text x="${W / 2}" y="60" text-anchor="middle" fill="${AXIS_TEXT}" font-size="14">還沒有填燒成程式</text></svg>`;
+  }
+  const pad = spark ? { l: 5, r: 5, t: 6, b: 6 } : { l: 44, r: 14, t: 30, b: 28 };
+  const yMax = spark ? 1320 : Math.max(400, Math.ceil((peak + 60) / 200) * 200);
+  const xMax = spark ? Math.max(total, 0.5) : Math.max(1, Math.ceil(total * 1.03));
+  const X = t => pad.l + (t / xMax) * (W - pad.l - pad.r);
+  const Y = T => pad.t + (1 - T / yMax) * (H - pad.t - pad.b);
+  const id = 'heat' + (++gradSeq);
+  const grad = `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(0).toFixed(1)}" x2="0" y2="${Y(1300).toFixed(1)}">${HEAT.map(([temp, col]) => `<stop offset="${(temp / 1300).toFixed(3)}" stop-color="${col}"/>`).join('')}</linearGradient>`;
+
+  let grid = '';
+  if (!spark) {
+    for (let T = 200; T <= yMax; T += 200) {
+      grid += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${Y(T).toFixed(1)}" y2="${Y(T).toFixed(1)}" stroke="${GRID}"/>`;
+      grid += `<text x="${pad.l - 6}" y="${(Y(T) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${AXIS_TEXT}">${T}</text>`;
+    }
+    const step = xMax <= 8 ? 1 : xMax <= 16 ? 2 : xMax <= 32 ? 4 : 8;
+    for (let h = 0; h <= xMax; h += step) {
+      grid += `<text x="${X(h).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="${AXIS_TEXT}">${h}${h === 0 ? '' : ' 時'}</text>`;
+    }
+    grid += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}" stroke="${GRID}"/>`;
+    grid += `<text x="${pad.l - 6}" y="${pad.t - 16}" text-anchor="end" font-size="11" fill="${AXIS_TEXT}">°C</text>`;
+  }
+
+  const area = `<polygon points="${pts.map(p => `${X(p.t).toFixed(1)},${Y(p.T).toFixed(1)}`).join(' ')} ${X(pts[pts.length - 1].t).toFixed(1)},${Y(0).toFixed(1)} ${X(0).toFixed(1)},${Y(0).toFixed(1)}" fill="url(#${id})" opacity="${spark ? .22 : .16}"/>`;
+  let lines = '';
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    lines += `<line x1="${X(a.t).toFixed(1)}" y1="${Y(a.T).toFixed(1)}" x2="${X(b.t).toFixed(1)}" y2="${Y(b.T).toFixed(1)}"${b.full ? ' stroke-dasharray="5 4"' : ''}/>`;
+  }
+  let marks = '';
+  if (!spark) {
+    marks = pts.slice(1).map(p => `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.T).toFixed(1)}" r="3" fill="url(#${id})"/>`).join('');
+    const pk = pts.find(p => p.T === peak);
+    const px = Math.min(Math.max(X(pk.t), pad.l + 30), W - pad.r - 30);
+    marks += `<text x="${px.toFixed(1)}" y="${(Y(peak) - 9).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="url(#${id})">${peak}°C</text>`;
+  }
+  const label = `燒成程式曲線，最高 ${peak}°C，約 ${fmtDuration(total)}`;
+  return `<svg${cls} viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}"><defs>${grad}</defs>${grid}${area}<g stroke="url(#${id})" stroke-width="${spark ? 2 : 2.6}" stroke-linecap="round">${lines}</g>${marks}</svg>`;
+}
+
+function chartWidth() { return Math.min(720, Math.max(280, (document.querySelector('main')?.clientWidth || 700) - 52)); }
+function previewWidth() { return Math.max(260, Math.min(560, innerWidth - 20) - 36 - 14); }
+
+/* ---------- 路由 ---------- */
+async function render({ quiet = false } = {}) {
+  const token = ++renderToken;
+  const h = location.hash.replace(/^#/, '') || '/';
+  const tab = h.startsWith('/tile') ? 'tiles' : h.startsWith('/trash') ? 'trash' : 'firings';
+  document.querySelectorAll('.tabs a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  if (!configured()) { view.innerHTML = setupHtml(); return; }
+  if (!quiet) view.innerHTML = '<p class="loading">讀取中…</p>';
+  try {
+    let m, html;
+    if (h === '/') html = await viewFirings();
+    else if ((m = h.match(/^\/firing\/(\d+)$/))) html = await viewFiring(+m[1]);
+    else if (h === '/tiles') html = await viewTiles();
+    else if ((m = h.match(/^\/tile\/(\d+)$/))) html = await viewTile(+m[1]);
+    else if (h === '/trash') html = await viewTrash();
+    else { location.hash = '#/'; return; }
+    if (token !== renderToken) return;
+    view.innerHTML = html;
+    document.title = (view.querySelector('h1')?.textContent || '') + '｜燒窯紀錄';
+  } catch (e) {
+    if (token !== renderToken) return;
+    view.innerHTML = `<div class="empty"><p>${esc(e.message)}</p>${e.status === 410 ? '<a class="btn" href="#/trash">打開回收桶</a>' : '<button class="btn" data-act="reload">重新讀取</button>'}</div>`;
+  }
+}
+
+function setupHtml() {
+  return `<div class="setup"><h1>還差一步</h1>
+  <p>用文字編輯器打開這個 HTML 檔，把 <code>API_BASE</code> 換成你的 Worker 網址，例如 <code>https://kiln-log.你的帳號.workers.dev</code>，存檔後重新整理。</p></div>`;
+}
+
+/* ---------- 窯次列表 ---------- */
+async function viewFirings() {
+  const list = await getFirings(true);
+  cur = { firings: list };
+  let html = `<h1>窯次</h1><p class="lede">${list.length ? `共 ${list.length} 窯` : '每一窯的燒成程式、窯位和開窯結果都記在這裡。'}</p>`;
+  if (!list.length) {
+    return html + `<div class="empty"><p>還沒有任何窯次。</p>${state.key ? '<button class="btn primary" data-act="new-firing">記錄第一窯</button>' : '<p>按右上角輸入寫入密碼後就能新增。</p>'}</div>`;
+  }
+  html += '<ul class="flist">';
+  let lastYear = null;
+  for (const f of list) {
+    const [y, mo, d] = String(f.date || '').split('-');
+    if (y !== lastYear) { html += `<li class="yearmark">${esc(y)}</li>`; lastYear = y; }
+    const title = [coneLabel(f.cone), f.type].filter(Boolean).join(' ') || '未填 Cone';
+    const sub = [f.kiln, f.atmosphere, f.tile_count ? `試片 ${f.tile_count}` : '', f.photo_count ? `照片 ${f.photo_count}` : ''].filter(Boolean);
+    html += `<li><a class="frow" href="#/firing/${f.id}">
+      <div class="fdate"><span class="d">${+mo}/${+d}</span></div>
+      <div><div class="ftitle">${f.cone ? coneIcon() : ''}${esc(title)}</div><div class="fsub">${sub.map(s => `<span>${esc(s)}</span>`).join('')}</div></div>
+      ${curveSvg(parseCurve(f.curve), { spark: true })}
+    </a></li>`;
+  }
+  return html + '</ul><button class="btn primary fab w" data-act="new-firing">＋ 新窯次</button>';
+}
+
+/* ---------- 單一窯次 ---------- */
+async function viewFiring(id) {
+  const f = await api(`/api/firings/${id}`);
+  cur = { firing: f, photos: f.photos };
+  const segs = parseCurve(f.curve);
+  const c = curvePoints(segs);
+  const byPl = groupBy(f.photos.filter(p => p.placement_id), 'placement_id');
+  const kilnPhotos = f.photos.filter(p => !p.placement_id);
+  const facts = [['窯', f.kiln], ['類型', f.type], ['目標 Cone', f.cone], ['氣氛', f.atmosphere],
+    ['實測最高溫', f.peak_actual != null ? `${f.peak_actual}°C` : ''], ['記錄人', f.created_by]].filter(([, v]) => v);
+
+  let html = `<a class="back" href="#/">← 所有窯次</a>
+  <h1>${esc([coneLabel(f.cone), f.type].filter(Boolean).join(' ') || '窯次')}</h1>
+  <p class="lede">${esc(longDate(f.date))}</p>
+  <div class="btnrow w"><button class="btn" data-act="edit-firing">編輯這一窯</button><button class="btn danger" data-act="del-firing">刪除</button></div>
+  <div class="peephole">${curveSvg(segs, { width: chartWidth() })}
+    ${c.pts.length > 1 ? `<div class="cap"><span>程式最高 ${c.peak}°C</span><span>全程約 ${fmtDuration(c.total)}${c.est ? '（全速段以每小時 600°C 估算）' : ''}</span></div>` : ''}
+  </div>`;
+
+  if (segs.length) {
+    html += `<table class="segs"><thead><tr><th>段</th><th>速率 °C/時</th><th>目標 °C</th><th>持溫</th></tr></thead><tbody>${
+      segs.map((s, i) => `<tr><td>${i + 1}</td><td>${s.rate ? esc(s.rate) : '全速'}</td><td>${esc(s.target ?? '')}</td><td>${s.hold ? `${esc(s.hold)} 分` : ''}</td></tr>`).join('')
+    }</tbody></table>`;
+  }
+  if (facts.length) html += `<dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+  if (f.witness) html += `<h2>觀測錐</h2><p class="prose">${esc(f.witness)}</p>`;
+  if (f.notes) html += `<h2>備註</h2><p class="prose">${esc(f.notes)}</p>`;
+
+  html += `<div class="headrow"><h2>入窯試片</h2><button class="btn small w" data-act="new-placement">＋ 放入試片</button></div>`;
+  if (f.placements.length) {
+    html += kilnStack(f.placements);
+    html += `<ul class="plist">${f.placements.map(p => placementItem(p, byPl[p.id] || [], 'firing')).join('')}</ul>`;
+  } else {
+    html += `<p class="muted">這一窯還沒有放入試片。${state.key ? '' : '輸入寫入密碼後就能新增。'}</p>`;
+  }
+
+  html += `<div class="headrow"><h2>開窯照片</h2><button class="btn small w" data-act="photo-firing">＋ 照片</button></div>`;
+  html += kilnPhotos.length ? thumbs(kilnPhotos) : '<p class="muted">整窯的照片放這裡，單片試片的照片請在上面那片試片按「＋ 照片」。</p>';
+  return html;
+}
+
+function placementItem(p, photos, ctx) {
+  const head = ctx === 'firing'
+    ? `<a class="pcode" href="#/tile/${p.tile_id}">${esc(p.tile_code)}${p.tile_name ? `<span>${esc(p.tile_name)}</span>` : ''}</a>`
+    : `<a class="tl-head" href="#/firing/${p.firing_id}">${esc(longDate(p.date))}　${esc([coneLabel(p.cone), p.type].filter(Boolean).join(' '))}</a>`;
+  const meta = [ctx === 'tile' ? p.kiln : '', ctx === 'tile' ? p.atmosphere : '', placeText(p), p.surface].filter(Boolean);
+  return `<li class="${ctx === 'firing' ? 'pitem' : ''}">
+    <div class="phead">${head}
+      <span class="w"><button class="btn small" data-act="photo-placement" data-id="${p.id}">＋ 照片</button> <button class="btn small" data-act="edit-placement" data-id="${p.id}">編輯</button></span>
+    </div>
+    <div class="pmeta">${meta.map(s => `<span>${esc(s)}</span>`).join('')}${p.rating ? `<span class="rating" aria-label="${p.rating} 分（滿分 5）">${stars(p.rating)}</span>` : ''}</div>
+    ${p.result ? `<p class="prose">${esc(p.result)}</p>` : ''}
+    ${p.notes ? `<p class="prose muted">${esc(p.notes)}</p>` : ''}
+    ${photos.length ? thumbs(photos) : ''}
+  </li>`;
+}
+
+function thumbs(photos) {
+  return `<div class="thumbs">${photos.map(p => `<button type="button" data-act="photo" data-id="${p.id}" aria-label="放大照片"><img src="${esc(photoUrl(p.key))}" loading="lazy" alt=""></button>`).join('')}</div>`;
+}
+
+function kilnStack(pls) {
+  const shelved = pls.filter(p => p.shelf != null);
+  const loose = pls.length - shelved.length;
+  if (!shelved.length) return '<p class="kiln-note">填上試片在第幾層，這裡就會畫出窯內位置。</p>';
+  const chip = p => `<a class="chip" href="#/tile/${p.tile_id}" title="${esc(p.tile_name || '')}">${esc(p.tile_code)}</a>`;
+  const max = Math.max(...shelved.map(p => p.shelf));
+  const min = Math.min(1, ...shelved.map(p => p.shelf));
+  let rows = '';
+  for (let s = max; s >= min; s--) {
+    const here = shelved.filter(p => p.shelf === s);
+    const cells = SPOTS.map(sp => `<div class="spot"><span class="spot-name">${sp}</span>${here.filter(p => p.spot === sp).map(chip).join('')}</div>`).join('');
+    const others = here.filter(p => !SPOTS.includes(p.spot));
+    rows += `<div class="shelf"><div class="shelf-label" aria-label="第 ${s} 層">${s}</div><div class="shelf-body"><div class="spots">${cells}</div>${others.length ? `<div class="extra">${others.map(chip).join('')}</div>` : ''}</div></div>`;
+  }
+  return `<div class="kiln" role="group" aria-label="窯內配置">${rows}</div>
+  <p class="kiln-note">層數從最底層 1 往上數。每層上排靠窯後，下排靠窯門。${loose ? `另有 ${loose} 片沒填層數。` : ''}</p>`;
+}
+
+/* ---------- 試片列表 ---------- */
+async function viewTiles() {
+  const list = await getTiles(true);
+  cur = { tiles: list };
+  let html = `<h1>試片</h1><p class="lede">${list.length ? `共 ${list.length} 片` : '每片試片的配方，和它在每一窯燒出來的樣子。'}</p>`;
+  if (!list.length) {
+    return html + `<div class="empty"><p>還沒有試片。</p>${state.key ? '<button class="btn primary" data-act="new-tile">新增第一片</button>' : '<p>按右上角輸入寫入密碼後就能新增。</p>'}</div>`;
+  }
+  html += `<input class="search" id="tileSearch" type="search" placeholder="找編號、名稱、土，或配方裡的原料" aria-label="搜尋試片">`;
+  return html + `<div class="tgrid" id="tgrid">${tileCards(list)}</div><button class="btn primary fab w" data-act="new-tile">＋ 新試片</button>`;
+}
+
+function tileCards(list) {
+  if (!list.length) return '<p class="muted">沒有符合的試片。</p>';
+  return list.map(t => `<a class="tcard" href="#/tile/${t.id}">
+    <div class="img">${t.cover ? `<img src="${esc(photoUrl(t.cover))}" loading="lazy" alt="">` : esc(t.code)}</div>
+    <div class="c">${esc(t.code)}</div>
+    <div class="n">${esc([t.name, t.clay].filter(Boolean).join('／')) || '&nbsp;'}</div>
+    <div class="n">${t.firing_count ? `燒過 ${t.firing_count} 次` : '還沒入窯'}</div></a>`).join('');
+}
+
+/* ---------- 單一試片 ---------- */
+async function viewTile(id) {
+  const t = await api(`/api/tiles/${id}`);
+  cur = { tile: t, photos: t.photos };
+  const byPl = groupBy(t.photos.filter(p => p.placement_id), 'placement_id');
+  const own = t.photos.filter(p => !p.placement_id);
+  const facts = [['名稱', t.name], ['土', t.clay], ['施釉', t.application], ['記錄人', t.created_by]].filter(([, v]) => v);
+
+  let html = `<a class="back" href="#/tiles">← 所有試片</a>
+  <h1>${esc(t.code)}</h1>
+  <p class="lede">${t.placements.length ? `燒過 ${t.placements.length} 次` : '還沒入窯'}</p>
+  <div class="btnrow w"><button class="btn" data-act="edit-tile">編輯試片</button><button class="btn danger" data-act="del-tile">刪除</button></div>`;
+  if (facts.length) html += `<dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+  if (t.recipe) html += `<h2>配方</h2><div class="recipe">${esc(t.recipe)}</div>`;
+  if (t.notes) html += `<h2>備註</h2><p class="prose">${esc(t.notes)}</p>`;
+
+  html += '<h2>燒成紀錄</h2>';
+  html += t.placements.length
+    ? `<ul class="timeline">${t.placements.map(p => placementItem(p, byPl[p.id] || [], 'tile')).join('')}</ul>`
+    : '<p class="muted">這片還沒入窯。到窯次頁面按「放入試片」，結果就會排在這裡。</p>';
+
+  html += `<div class="headrow"><h2>入窯前的照片</h2><button class="btn small w" data-act="photo-tile">＋ 照片</button></div>`;
+  html += own.length ? thumbs(own) : '<p class="muted">素坯、上釉後的樣子可以放這裡。</p>';
+  return html;
+}
+
+/* ---------- 回收桶 ---------- */
+function deletedLine(x) {
+  const d = x.deleted_at ? new Date(x.deleted_at.replace(' ', 'T') + 'Z') : null;
+  const when = d && !isNaN(d) ? `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '';
+  return [x.deleted_by, when ? `${when} 刪除` : '刪除'].filter(Boolean).join(' ');
+}
+function trashActs(kind, id, label) {
+  return `<div class="acts w"><button class="btn small" data-act="trash-restore" data-kind="${kind}" data-id="${id}">還原</button><button class="btn small danger" data-act="trash-purge" data-kind="${kind}" data-id="${id}" data-label="${esc(label)}">永久刪除</button></div>`;
+}
+function firingName(x) { return `${longDate(x.date)} ${[coneLabel(x.cone), x.type].filter(Boolean).join(' ')}`.trim(); }
+
+async function viewTrash() {
+  const t = await api('/api/trash');
+  const total = t.firings.length + t.tiles.length + t.placements.length + t.photos.length;
+  let html = `<h1>回收桶</h1><p class="lede">刪掉的東西會先放在這裡，不會自動清掉。還原後回到原本的位置；永久刪除之後就救不回來。</p>`;
+  if (!total) return html + '<div class="empty"><p>回收桶是空的。</p></div>';
+  const count = (n, unit) => n ? `${n} ${unit}` : '';
+  if (t.firings.length) {
+    html += `<h2>窯次</h2><ul class="trash">${t.firings.map(x => `<li><div>
+      <div class="tr-title">${esc(firingName(x))}</div>
+      <div class="pmeta">${[x.kiln, count(x.placement_count, '筆試片紀錄'), count(x.photo_count, '張照片'), deletedLine(x)].filter(Boolean).map(s => `<span>${esc(s)}</span>`).join('')}</div>
+    </div>${trashActs('firing', x.id, `窯次「${firingName(x)}」和裡面所有紀錄、照片`)}</li>`).join('')}</ul>`;
+  }
+  if (t.tiles.length) {
+    html += `<h2>試片</h2><ul class="trash">${t.tiles.map(x => `<li><div>
+      <div class="tr-title">${esc(x.code)}${x.name ? `<span class="muted">　${esc(x.name)}</span>` : ''}</div>
+      <div class="pmeta">${[count(x.placement_count, '筆燒成紀錄'), count(x.photo_count, '張照片'), deletedLine(x)].filter(Boolean).map(s => `<span>${esc(s)}</span>`).join('')}</div>
+    </div>${trashActs('tile', x.id, `試片 ${x.code} 和它所有的紀錄、照片`)}</li>`).join('')}</ul>`;
+  }
+  if (t.placements.length) {
+    html += `<h2>試片紀錄</h2><ul class="trash">${t.placements.map(x => `<li><div>
+      <div class="tr-title">${esc(x.tile_code)}<span class="muted">　在 ${esc(firingName(x))}</span></div>
+      <div class="pmeta">${[placeText(x), count(x.photo_count, '張照片'), deletedLine(x)].filter(Boolean).map(s => `<span>${esc(s)}</span>`).join('')}</div>
+      ${x.result ? `<p class="prose">${esc(x.result)}</p>` : ''}
+    </div>${trashActs('placement', x.id, `${x.tile_code} 在這一窯的紀錄`)}</li>`).join('')}</ul>`;
+  }
+  if (t.photos.length) {
+    html += `<h2>照片</h2><div class="trash-photos">${t.photos.map(x => `<figure>
+      <img src="${esc(photoUrl(x.key))}" loading="lazy" alt="">
+      <figcaption>${esc([x.tile_code, x.date ? firingName(x) : ''].filter(Boolean).join('，'))}<br><span class="muted">${esc(deletedLine(x))}</span></figcaption>
+      ${trashActs('photo', x.id, '這張照片')}</figure>`).join('')}</div>`;
+  }
+  return html;
+}
+
+/* ---------- 表單：窯次 ---------- */
+async function openFiringForm(f) {
+  const all = await getFirings().catch(() => []);
+  const kilns = [...new Set(all.map(x => x.kiln).filter(Boolean))];
+  const isNew = !f;
+  f = f || { date: today(), type: '釉燒', atmosphere: '氧化', kiln: kilns[0] || '' };
+  let segs = parseCurve(f.curve);
+  if (isNew) {
+    const last = all.find(x => x.type === f.type && parseCurve(x.curve).length);
+    if (last) segs = parseCurve(last.curve);
+  }
+  const prev = all.filter(x => x.id !== f.id && parseCurve(x.curve).length).slice(0, 40);
+  const html = `
+  <div class="two">
+    <label class="field"><span>日期</span><input type="date" name="date" value="${esc(f.date)}" required></label>
+    <label class="field"><span>窯</span><input name="kiln" list="dl-kilns" value="${esc(f.kiln || '')}" placeholder="例如：系館電窯"></label>
+  </div>
+  <div class="two">
+    <label class="field"><span>類型</span><select name="type">${opts(['釉燒', '素燒', '其他'], f.type)}</select></label>
+    <label class="field"><span>氣氛</span><select name="atmosphere">${opts(['氧化', '還原', '其他'], f.atmosphere, '未記錄')}</select></label>
+  </div>
+  <label class="field"><span>目標 Cone</span><input name="cone" list="dl-cones" value="${esc(f.cone || '')}" placeholder="例如：6、04"></label>
+  <div class="field"><span>燒成程式</span>
+    <div class="seg-editor">
+      <div class="seg-row seg-head"><span></span><span>速率 °C/時</span><span>目標 °C</span><span>持溫 分</span><span></span></div>
+      <div id="segRows"></div>
+      <div class="btnrow" style="margin-top:2px">
+        <button type="button" class="btn small" data-act="seg-add">＋ 加一段</button>
+        ${prev.length ? `<select class="btn small" id="segCopy" aria-label="套用之前的燒成程式"><option value="">套用之前的程式…</option>${prev.map(x => `<option value="${x.id}">${esc(x.date)} ${esc([coneLabel(x.cone), x.type, x.kiln].filter(Boolean).join(' '))}</option>`).join('')}</select>` : ''}
+      </div>
+    </div>
+    <p class="hint">速率留空代表全速。目標比上一段低就是降溫段。${isNew && segs.length ? '已先帶入上一窯同類型的程式。' : ''}</p>
+    <div class="preview" id="segPreview"></div>
+  </div>
+  <label class="field"><span>實測最高溫 °C</span><input name="peak_actual" type="number" inputmode="decimal" value="${esc(f.peak_actual ?? '')}"></label>
+  <label class="field"><span>觀測錐結果</span><textarea name="witness" placeholder="例如：上層 6 號錐倒到 3 點鐘，下層 5 號錐全倒">${esc(f.witness || '')}</textarea></label>
+  <label class="field"><span>備註</span><textarea name="notes">${esc(f.notes || '')}</textarea></label>
+  <datalist id="dl-kilns">${kilns.map(k => `<option value="${esc(k)}">`).join('')}</datalist>
+  <datalist id="dl-cones">${CONES.map(c => `<option value="${c}">`).join('')}</datalist>`;
+
+  openSheet(isNew ? '新增窯次' : '編輯窯次', html, async form => {
+    const body = {
+      date: fv(form, 'date'), kiln: fv(form, 'kiln'), type: fv(form, 'type'), atmosphere: fv(form, 'atmosphere'),
+      cone: fv(form, 'cone'), peak_actual: fv(form, 'peak_actual'), witness: fv(form, 'witness'), notes: fv(form, 'notes'),
+      curve: readSegs().filter(s => s.target !== ''),
+    };
+    if (!body.date) throw new Error('請填日期');
+    if (isNew) {
+      body.created_by = state.name;
+      const r = await api('/api/firings', { method: 'POST', body });
+      invalidate(); toast('已新增窯次');
+      location.hash = `#/firing/${r.id}`;
+    } else {
+      await api(`/api/firings/${f.id}`, { method: 'PUT', body });
+      invalidate(); toast('已儲存');
+      render({ quiet: true });
+    }
+  }, isNew ? '新增窯次' : '儲存');
+  writeSegs(segs.length ? segs : [{}]);
+}
+
+function writeSegs(segs) {
+  $('#segRows').innerHTML = segs.map((s, i) => `<div class="seg-row">
+    <span class="n">${i + 1}</span>
+    <input data-k="rate" type="number" inputmode="decimal" placeholder="全速" value="${esc(s.rate ?? '')}" aria-label="第 ${i + 1} 段速率">
+    <input data-k="target" type="number" inputmode="decimal" value="${esc(s.target ?? '')}" aria-label="第 ${i + 1} 段目標溫度">
+    <input data-k="hold" type="number" inputmode="decimal" placeholder="0" value="${esc(s.hold ?? '')}" aria-label="第 ${i + 1} 段持溫分鐘">
+    <button type="button" data-act="seg-del" data-i="${i}" aria-label="刪除第 ${i + 1} 段">×</button></div>`).join('');
+  updatePreview();
+}
+function readSegs() {
+  return [...document.querySelectorAll('#segRows .seg-row')].map(r => ({
+    rate: r.querySelector('[data-k=rate]').value.trim(),
+    target: r.querySelector('[data-k=target]').value.trim(),
+    hold: r.querySelector('[data-k=hold]').value.trim(),
+  }));
+}
+function updatePreview() {
+  const p = $('#segPreview');
+  if (p) p.innerHTML = curveSvg(readSegs(), { width: previewWidth() });
+}
+
+/* ---------- 表單：試片 ---------- */
+function openTileForm(t) {
+  const isNew = !t;
+  t = t || {};
+  openSheet(isNew ? '新增試片' : `編輯 ${t.code}`, `
+  <div class="two">
+    <label class="field"><span>編號</span><input name="code" value="${esc(t.code || '')}" required placeholder="例如：T-024" autocomplete="off"></label>
+    <label class="field"><span>名稱</span><input name="name" value="${esc(t.name || '')}" placeholder="例如：鐵紅結晶"></label>
+  </div>
+  <div class="two">
+    <label class="field"><span>土</span><input name="clay" value="${esc(t.clay || '')}" placeholder="例如：白瓷土"></label>
+    <label class="field"><span>施釉方式、厚度</span><input name="application" value="${esc(t.application || '')}" placeholder="例如：浸釉 3 秒"></label>
+  </div>
+  <label class="field"><span>配方</span><textarea name="recipe" rows="6" placeholder="可以直接貼上配比換算網頁的結果">${esc(t.recipe || '')}</textarea></label>
+  <label class="field"><span>備註</span><textarea name="notes">${esc(t.notes || '')}</textarea></label>`,
+  async form => {
+    const body = { code: fv(form, 'code'), name: fv(form, 'name'), clay: fv(form, 'clay'), application: fv(form, 'application'), recipe: fv(form, 'recipe'), notes: fv(form, 'notes') };
+    if (!body.code) throw new Error('請填試片編號');
+    if (isNew) {
+      body.created_by = state.name;
+      const r = await api('/api/tiles', { method: 'POST', body });
+      invalidate(); toast('已新增試片');
+      location.hash = `#/tile/${r.id}`;
+    } else {
+      await api(`/api/tiles/${t.id}`, { method: 'PUT', body });
+      invalidate(); toast('已儲存');
+      render({ quiet: true });
+    }
+  }, isNew ? '新增試片' : '儲存');
+}
+
+/* ---------- 表單：放入試片 ---------- */
+async function openPlacementForm(p, firing) {
+  const tiles = await getTiles();
+  const isNew = !p;
+  p = p || {};
+  const code = p.tile_code || tiles.find(t => t.id === p.tile_id)?.code || '';
+  openSheet(isNew ? '放入試片' : `編輯 ${code}`, `
+  <label class="field"><span>試片編號</span><input name="code" list="dl-tiles" value="${esc(code)}" required autocomplete="off" data-tilepick placeholder="輸入編號；新的編號會自動建立"></label>
+  <p class="hint" id="tileHint"></p>
+  <label class="field" id="newNameField" hidden><span>新試片名稱</span><input name="new_name" placeholder="例如：鐵紅結晶"></label>
+  <div class="two">
+    <label class="field"><span>第幾層（最底層是 1）</span><input name="shelf" type="number" inputmode="numeric" min="1" value="${esc(p.shelf ?? '')}"></label>
+    <label class="field"><span>層內位置</span><select name="spot">${opts(SPOTS, p.spot, '未記錄')}</select></label>
+  </div>
+  <div class="two">
+    <label class="field"><span>表面</span><select name="surface">${opts(SURFACES, p.surface, '未記錄')}</select></label>
+    <label class="field"><span>評分</span><select name="rating">${opts([1, 2, 3, 4, 5].map(n => [n, stars(n)]), p.rating, '未評')}</select></label>
+  </div>
+  <label class="field"><span>開窯結果</span><textarea name="result" placeholder="發色、流釉、開片、針孔、縮釉…">${esc(p.result || '')}</textarea></label>
+  <label class="field"><span>備註</span><textarea name="notes">${esc(p.notes || '')}</textarea></label>
+  ${isNew ? '' : `<button type="button" class="btn danger" data-act="del-placement" data-id="${p.id}">把這片從這一窯移到回收桶</button>`}
+  <datalist id="dl-tiles">${tiles.map(t => `<option value="${esc(t.code)}">${esc(t.name || '')}</option>`).join('')}</datalist>`,
+  async form => {
+    const c = fv(form, 'code');
+    if (!c) throw new Error('請填試片編號');
+    let tile = (cache.tiles || tiles).find(t => t.code.toLowerCase() === c.toLowerCase());
+    if (!tile) {
+      const r = await api('/api/tiles', { method: 'POST', body: { code: c, name: fv(form, 'new_name'), created_by: state.name } });
+      tile = { id: r.id };
+    }
+    const body = { tile_id: tile.id, shelf: fv(form, 'shelf'), spot: fv(form, 'spot'), surface: fv(form, 'surface'), rating: fv(form, 'rating'), result: fv(form, 'result'), notes: fv(form, 'notes') };
+    if (isNew) {
+      Object.assign(body, { firing_id: firing.id, created_by: state.name });
+      await api('/api/placements', { method: 'POST', body });
+      toast(`已放入 ${c}`);
+    } else {
+      await api(`/api/placements/${p.id}`, { method: 'PUT', body });
+      toast('已儲存');
+    }
+    invalidate();
+    render({ quiet: true });
+  }, isNew ? '放入' : '儲存');
+  updateTileHint();
+}
+
+function updateTileHint() {
+  const input = document.querySelector('[data-tilepick]');
+  if (!input) return;
+  const c = input.value.trim().toLowerCase();
+  const t = c && (cache.tiles || []).find(x => x.code.toLowerCase() === c);
+  $('#newNameField').hidden = !c || !!t;
+  $('#tileHint').textContent = !c ? '' : t ? `${t.name || '已有這片試片'}，燒過 ${t.firing_count} 次` : '新編號，儲存時會一起建立這片試片';
+}
+
+/* ---------- 照片 ---------- */
+function pickPhotos(target) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.multiple = true;
+  input.onchange = () => uploadPhotos([...input.files], target);
+  input.click();
+}
+async function uploadPhotos(files, target) {
+  if (!files.length) return;
+  let ok = 0, lastErr = '';
+  for (let i = 0; i < files.length; i++) {
+    toast(`上傳照片 ${i + 1}/${files.length}…`, 120000);
+    try {
+      const blob = await shrink(files[i]);
+      const fd = new FormData();
+      fd.append('file', blob, 'photo.jpg');
+      for (const [k, v] of Object.entries(target)) fd.append(k, v);
+      if (state.name) fd.append('created_by', state.name);
+      await api('/api/photos', { method: 'POST', body: fd });
+      ok++;
+    } catch (e) { lastErr = e.message; }
+  }
+  const failed = files.length - ok;
+  toast(failed ? `上傳了 ${ok} 張，${failed} 張失敗：${lastErr}` : `已上傳 ${ok} 張照片`, failed ? 5000 : 2600);
+  invalidate();
+  render({ quiet: true });
+}
+async function shrink(file, max = 1800, quality = 0.85) {
+  let img;
+  try { img = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch {
+    img = await new Promise((res, rej) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = () => rej(new Error('讀不到這張照片，請換成 JPG 或 PNG'));
+      el.src = URL.createObjectURL(file);
+    });
+  }
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const s = Math.min(1, max / Math.max(w, h));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * s); canvas.height = Math.round(h * s);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+  if (!blob) throw new Error('照片轉檔失敗');
+  return blob;
+}
+function openLightbox(id) {
+  const p = (cur.photos || []).find(x => x.id === id);
+  if (!p) return;
+  cur.lightbox = p;
+  $('#lbImg').src = photoUrl(p.key);
+  $('#lbCap').textContent = [p.created_by, String(p.created_at || '').slice(0, 10)].filter(Boolean).join('　');
+  $('#lightbox').showModal();
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id ? +el.dataset.id : null;
+  try {
+    switch (act) {
+      case 'reload': render(); break;
+      case 'sheet-cancel': $('#sheet').close(); break;
+      case 'lb-close': $('#lightbox').close(); break;
+      case 'photo': openLightbox(id); break;
+
+      case 'new-firing': await openFiringForm(); break;
+      case 'edit-firing': await openFiringForm(cur.firing); break;
+      case 'del-firing': {
+        const f = cur.firing;
+        if (!confirm('把這一窯移到回收桶？裡面的試片紀錄和照片會跟著一起收起來，之後可以從回收桶還原。')) break;
+        await api(`/api/firings/${f.id}`, { method: 'DELETE' });
+        invalidate(); location.hash = '#/';
+        toast('已移到回收桶', UNDO_MS, { label: '復原', fn: async () => { await restoreItem('firing', f.id); location.hash = `#/firing/${f.id}`; } });
+        break;
+      }
+
+      case 'new-tile': openTileForm(); break;
+      case 'edit-tile': openTileForm(cur.tile); break;
+      case 'del-tile': {
+        const t = cur.tile;
+        if (!confirm(`把試片 ${t.code} 移到回收桶？它在各窯次的紀錄和照片會跟著一起收起來，之後可以從回收桶還原。`)) break;
+        await api(`/api/tiles/${t.id}`, { method: 'DELETE' });
+        invalidate(); location.hash = '#/tiles';
+        toast(`已把 ${t.code} 移到回收桶`, UNDO_MS, { label: '復原', fn: async () => { await restoreItem('tile', t.id); location.hash = `#/tile/${t.id}`; } });
+        break;
+      }
+
+      case 'new-placement': await openPlacementForm(null, cur.firing); break;
+      case 'edit-placement': {
+        const p = (cur.firing?.placements || cur.tile?.placements || []).find(x => x.id === id);
+        if (p) await openPlacementForm(p, cur.firing);
+        break;
+      }
+      case 'del-placement': {
+        await api(`/api/placements/${id}`, { method: 'DELETE' });
+        $('#sheet').close(); invalidate(); render({ quiet: true });
+        toast('已移到回收桶', UNDO_MS, { label: '復原', fn: async () => { await restoreItem('placement', id); render({ quiet: true }); } });
+        break;
+      }
+
+      case 'trash-restore': {
+        await restoreItem(el.dataset.kind, id);
+        render({ quiet: true });
+        break;
+      }
+      case 'trash-purge': {
+        const what = el.dataset.label || '這筆資料';
+        if (!confirm(`永久刪除${what}？資料和照片檔案會真的被刪掉，無法復原。`)) break;
+        await api(`/api/trash/${el.dataset.kind}/${id}`, { method: 'DELETE' });
+        toast('已永久刪除'); render({ quiet: true });
+        break;
+      }
+
+      case 'photo-firing': pickPhotos({ firing_id: cur.firing.id }); break;
+      case 'photo-placement': pickPhotos({ placement_id: id }); break;
+      case 'photo-tile': pickPhotos({ tile_id: cur.tile.id }); break;
+
+      case 'seg-add': writeSegs([...readSegs(), {}]); $('#segRows .seg-row:last-child [data-k=target]')?.focus(); break;
+      case 'seg-del': {
+        const segs = readSegs(); segs.splice(+el.dataset.i, 1);
+        writeSegs(segs.length ? segs : [{}]);
+        break;
+      }
+    }
+  } catch (err) { toast(err.message, 4200); }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'tileSearch') {
+    const q = e.target.value.trim().toLowerCase();
+    const list = (cur.tiles || []).filter(t => !q || [t.code, t.name, t.clay, t.recipe].some(v => String(v || '').toLowerCase().includes(q)));
+    $('#tgrid').innerHTML = tileCards(list);
+  } else if (e.target.closest('#segRows')) {
+    updatePreview();
+  } else if (e.target.matches('[data-tilepick]')) {
+    updateTileHint();
+  }
+});
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'segCopy' && e.target.value) {
+    const src = (cache.firings || []).find(x => x.id === +e.target.value);
+    if (src) writeSegs(parseCurve(src.curve));
+    e.target.value = '';
+  }
+});
+
+$('#lbDelete').addEventListener('click', async () => {
+  const p = cur.lightbox;
+  if (!p) return;
+  try {
+    await api(`/api/photos/${p.id}`, { method: 'DELETE' });
+    $('#lightbox').close(); invalidate(); render({ quiet: true });
+    toast('照片已移到回收桶', UNDO_MS, { label: '復原', fn: async () => { await restoreItem('photo', p.id); render({ quiet: true }); } });
+  } catch (err) { toast(err.message, 4200); }
+});
+$('#lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$('#lockBtn').addEventListener('click', openKeyDialog);
+addEventListener('hashchange', () => { render(); scrollTo(0, 0); });
+
+updateLock();
+render();
+</script>
+</body>
+</html>
